@@ -23,25 +23,9 @@ def correlationAnalysis(df: pd.DataFrame):
     plt.show()
 
 
-def categoricalAndPriceRelations(df: pd.DataFrame):
-    sb.boxplot(x='fuel', y='selling_price', data=df)
-    plt.title("Odnos tipa goriva i cene")
-    plt.grid(True)
-    plt.show()
-
-    sb.boxplot(x='seller_type', y='selling_price', data=df)
-    plt.title("Odnos tipa prodavca i cene")
-    plt.grid(True)
-    plt.show()
-
-    sb.boxplot(x='transmission', y='selling_price', data=df)
-    plt.title("Odnos tipa menjaca i cene")
-    plt.grid(True)
-    plt.show()
-
-    plt.figure(figsize=(8, 7))
-    sb.boxplot(x='owner', y='selling_price', data=df)
-    plt.title("Odnos vlasnika i cene")
+def categoricalAndPriceRelations(df: pd.DataFrame, column):
+    sb.boxplot(x=column, y='selling_price', data=df)
+    plt.title(f"Odnos {column} i cene")
     plt.grid(True)
     plt.show()
 
@@ -65,7 +49,10 @@ def exploratoryDataAnalysis(df: pd.DataFrame):
 
     distributionOfNumericalArguments(df)
     correlationAnalysis(df)
-    categoricalAndPriceRelations(df)
+    
+    columns = ["fuel", "seller_type", "transmission", "owner"]
+    for column in columns:
+        categoricalAndPriceRelations(df, column)
 
 
 def deleteOrInsertMissedValues(df: pd.DataFrame):
