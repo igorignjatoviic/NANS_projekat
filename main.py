@@ -4,11 +4,12 @@ import seaborn as sb
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-# create ridge, lasso and random forest and compare them
+# translate words from windows to english and test program
 def detectionOfExtremeValues(df: pd.DataFrame, columns):
     for column in columns:
         plt.boxplot(df[column])
@@ -122,9 +123,7 @@ def distributionOfResiduals(x, y):
 def evaluateModel(model: LinearRegression, x, y, name):
     yPred = model.predict(x)
 
-    rSquared = r2_score(y, yPred)
-    meanSquaredError = mean_squared_error(y, yPred)
-    rmse = np.sqrt(meanSquaredError)
+    rSquared, meanSquaredError, rmse = calculateMetrics(y, yPred)
 
     print(f"{name} -> R²: {rSquared:.2f}, MSE: {meanSquaredError:.2f}, RMSE: {rmse:.2f}")
 
@@ -141,12 +140,73 @@ def multipleLinearRegression(df: pd.DataFrame, x: pd.DataFrame, y: pd.DataFrame)
         dataSet = dataSets[i]
         evaluateModel(model, dataSet[0], dataSet[1], dataSet[2])
 
+    coefficients = calculateCoefficients(x, model)
+    print(f"\nCoefficients - Multiple Linear Regression\n", coefficients)
+
+
+def compareRegressionModels(x: pd.DataFrame, y: pd.DataFrame) -> pd.DataFrame:
+    xTrain, xTemp, yTrain, yTemp = train_test_split(x, y, train_size=0.6, random_state=42)
+    _, xTest, _, yTest = train_test_split(xTemp, yTemp, train_size=0.5, random_state=42)
+
+    models = generateModels()
+
+    results = []
+
+    for name, model in models.items():
+        model.fit(xTrain, yTrain)
+        yPred = model.predict(xTest)
+
+        rSqaured, meanSquaredError, rmse = calculateMetrics(yTest, yPred)
+
+        results.append((name, rSqaured, meanSquaredError, rmse))
+
+        if name != "Random Forest":
+            coefficients = calculateCoefficients(xTrain, model)
+            print(f"\nCoefficients - {name}\n", coefficients)
+        else:
+            importances = calculateImportances(xTrain, model)
+            print(f"\nImportances - Random Forest\n", importances)
+    
+    resultsDf = pd.DataFrame(results, columns=['Model', 'R²', 'MSE', 'RMSE'])
+
+    return resultsDf
+
+
+def generateModels() -> dict:
+    models = {
+        "Linear Regression": LinearRegression(),
+        "Ridge": Ridge(alpha=1.0),
+        "Lasso": Lasso(alpha=0.1),
+        "Random Forest": RandomForestRegressor(n_estimators=200, random_state=42)
+    }
+
+    return models
+
+
+def calculateCoefficients(x: pd.DataFrame, model) -> pd.DataFrame:
     coefficients = pd.DataFrame({
         "Feature": x.columns,
         "Coefficient": model.coef_
     }).sort_values(by="Coefficient", ascending=False)
-    print(coefficients)
 
+    return coefficients
+
+
+def calculateImportances(x: pd.DataFrame, model) -> pd.DataFrame:
+    importances = pd.DataFrame({
+        "Feature": x.columns,
+        "Importance": model.feature_importances_
+    }).sort_values(by="Importance", ascending=False)
+
+    return importances
+
+
+def calculateMetrics(stY: pd.DataFrame, ndY: pd.DataFrame) -> tuple[float, float, float]:
+    rSqaured = r2_score(stY, ndY)
+    meanSqauredError = mean_squared_error(stY, ndY)
+    rmse = np.sqrt(meanSqauredError)
+
+    return (rSqaured, meanSqauredError, rmse)
 
 def loadCarDetails(fileName) -> pd.DataFrame:
     df = pd.read_csv(fileName)
@@ -163,3 +223,6 @@ if __name__ == "__main__":
     distributionOfResiduals(x, y)
 
     multipleLinearRegression(df, x, y)
+
+    resultsDf = compareRegressionModels(x, y)
+    print(f"\nModel comparisson:\n{resultsDf}")
