@@ -9,11 +9,10 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-# translate words from windows to english and test program
 def detectionOfExtremeValues(df: pd.DataFrame, columns):
     for column in columns:
         plt.boxplot(df[column])
-        plt.title(f"Detekcija ekstremnih vrednosti - {column}")
+        plt.title(f"Detection of extreme values - {column}")
         plt.grid(True)
         plt.show()    
 
@@ -23,13 +22,14 @@ def correlationAnalysis(df: pd.DataFrame):
 
     plt.figure(figsize=(8, 6))
     sb.heatmap(corrMatrix, annot=True, cmap="coolwarm")
-    plt.title("Matrica korelacije")
+    plt.title("Correlations matrix")
     plt.show()
 
 
 def categoricalAndPriceRelations(df: pd.DataFrame, column):
+    plt.figure(figsize=(8, 6))
     sb.boxplot(x=column, y='selling_price', data=df)
-    plt.title(f"Odnos {column} i cene")
+    plt.title(f"{column} - selling_price")
     plt.grid(True)
     plt.show()
 
@@ -39,7 +39,7 @@ def distributionOfNumericalArguments(df: pd.DataFrame):
 
     for column in numericalColumns:
         plt.hist(df[column], bins=30)
-        plt.title(f"Distribucija - {column}")
+        plt.title(f"Distribution - {column}")
         plt.grid(True)
         plt.show()
 
@@ -47,9 +47,9 @@ def distributionOfNumericalArguments(df: pd.DataFrame):
 
 
 def exploratoryDataAnalysis(df: pd.DataFrame):
-    print(f"Dimenzije skupa podatka: {df.shape}\n")
-    print(f"Tipovi podataka:\n{df.dtypes}\n")
-    print(f"Nedostajuce vrednosti:\n{df.isnull().sum()}\n")
+    print(f"Dimensions of dataset: {df.shape}\n")
+    print(f"Data types:\n{df.dtypes}\n")
+    print(f"Missed values:\n{df.isnull().sum()}\n")
 
     distributionOfNumericalArguments(df)
     correlationAnalysis(df)
@@ -97,7 +97,7 @@ def convenienceCheck(df: pd.DataFrame):
 
     for column in numericalColumns:
         plt.scatter(df[column], df['selling_price'])
-        plt.title(f"Povera linearnosti: {column} - selling_price")
+        plt.title(f"Check linearity: {column} - selling_price")
         plt.xlabel(column)
         plt.ylabel("selling_price")
         plt.grid(True)
@@ -115,7 +115,7 @@ def distributionOfResiduals(x, y):
     residuals = yTest - yPred
 
     sb.histplot(residuals, kde=True)
-    plt.title("Distribucija reziduala")
+    plt.title("Distribution of residuals")
     plt.grid(True)
     plt.show()
 
@@ -207,6 +207,7 @@ def calculateMetrics(stY: pd.DataFrame, ndY: pd.DataFrame) -> tuple[float, float
     rmse = np.sqrt(meanSqauredError)
 
     return (rSqaured, meanSqauredError, rmse)
+
 
 def loadCarDetails(fileName) -> pd.DataFrame:
     df = pd.read_csv(fileName)
