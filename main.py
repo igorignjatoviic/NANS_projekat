@@ -65,16 +65,7 @@ def deleteOrInsertMissedValues(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def normalizationOfNumericalArguments(df: pd.DataFrame) -> pd.DataFrame:
-    scaler = StandardScaler()
-    numericalColumns = ["year", "km_driven"]
-
-    df[numericalColumns] = scaler.fit_transform(df[numericalColumns])
-
-    return df
-
-
-def oneHotEncoding(df: pd.DataFrame) -> tuple[str, int]:
+def oneHotEncoding(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     df.drop('name', axis=1, inplace=True)
     df = pd.get_dummies(df, drop_first=True)
 
@@ -86,7 +77,6 @@ def oneHotEncoding(df: pd.DataFrame) -> tuple[str, int]:
 
 def dataPreprocessing(df: pd.DataFrame):
     df = deleteOrInsertMissedValues(df)
-    df = normalizationOfNumericalArguments(df)
     x, y = oneHotEncoding(df)
 
     return (df, x, y)
@@ -132,6 +122,15 @@ def multipleLinearRegression(df: pd.DataFrame, x: pd.DataFrame, y: pd.DataFrame)
     xTrain, xTemp, yTrain, yTemp = train_test_split(x, y, train_size=0.6, random_state=42)
     xVal, xTest, yVal, yTest = train_test_split(xTemp, yTemp, train_size=0.5, random_state=42)
 
+    scaler = StandardScaler()
+    numericalColumns = ["year", "km_driven"]
+
+    scaler.fit(xTrain[numericalColumns])
+
+    xTrain[numericalColumns] = scaler.transform(xTrain[numericalColumns])
+    xVal[numericalColumns] = scaler.transform(xVal[numericalColumns])
+    xTest[numericalColumns] = scaler.transform(xTest[numericalColumns])
+
     model = LinearRegression()
     model.fit(xTrain, yTrain)
 
@@ -140,13 +139,21 @@ def multipleLinearRegression(df: pd.DataFrame, x: pd.DataFrame, y: pd.DataFrame)
         dataSet = dataSets[i]
         evaluateModel(model, dataSet[0], dataSet[1], dataSet[2])
 
-    coefficients = calculateCoefficients(x, model)
+    coefficients = calculateCoefficients(xTrain, model)
     print(f"\nCoefficients - Multiple Linear Regression\n", coefficients)
 
 
 def compareRegressionModels(x: pd.DataFrame, y: pd.DataFrame) -> pd.DataFrame:
     xTrain, xTemp, yTrain, yTemp = train_test_split(x, y, train_size=0.6, random_state=42)
     _, xTest, _, yTest = train_test_split(xTemp, yTemp, train_size=0.5, random_state=42)
+
+    scaler = StandardScaler()
+    numericalColumns = ["year", "km_driven"]
+
+    scaler.fit(xTrain[numericalColumns])
+
+    xTrain[numericalColumns] = scaler.transform(xTrain[numericalColumns])
+    xTest[numericalColumns] = scaler.transform(xTest[numericalColumns])
 
     models = generateModels()
 
@@ -163,6 +170,7 @@ def compareRegressionModels(x: pd.DataFrame, y: pd.DataFrame) -> pd.DataFrame:
         if name != "Random Forest":
             coefficients = calculateCoefficients(xTrain, model)
             print(f"\nCoefficients - {name}\n", coefficients)
+            plotCoefficients(coefficients, name)
         else:
             importances = calculateImportances(xTrain, model)
             print(f"\nImportances - Random Forest\n", importances)
@@ -170,6 +178,27 @@ def compareRegressionModels(x: pd.DataFrame, y: pd.DataFrame) -> pd.DataFrame:
     resultsDf = pd.DataFrame(results, columns=['Model', 'R²', 'MSE', 'RMSE'])
 
     return resultsDf
+
+
+def plotModelResults(df: pd.DataFrame):
+    plt.figure()
+    plt.bar(df['Model'], df['R²'])
+    plt.title("R² Comparison")
+    plt.show()
+
+    plt.figure()
+    plt.bar(df['Model'], df['RMSE'])
+    plt.title("RMSE Comparison")
+    plt.show()
+
+
+def plotCoefficients(coefficients, name):
+    plt.figure(figsize=(8, 7))
+    plt.bar(coefficients['Feature'], coefficients['Coefficient'])
+    plt.xticks(rotation=60, fontsize=5)
+    plt.title(f"Coefficients - {name}")
+    plt.ylabel("Value")
+    plt.show()
 
 
 def generateModels() -> dict:
@@ -227,3 +256,4 @@ if __name__ == "__main__":
 
     resultsDf = compareRegressionModels(x, y)
     print(f"\nModel comparisson:\n{resultsDf}")
+    plotModelResults(resultsDf)
