@@ -9,7 +9,6 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-# compare regression models in pp
 def detectionOfExtremeValues(df: pd.DataFrame, columns):
     for column in columns:
         plt.boxplot(df[column])
