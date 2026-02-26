@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-# detection of extreme values in pp
+# compare regression models in pp
 def detectionOfExtremeValues(df: pd.DataFrame, columns):
     for column in columns:
         plt.boxplot(df[column])
@@ -60,7 +60,7 @@ def exploratoryDataAnalysis(df: pd.DataFrame):
         categoricalAndPriceRelations(df, column)
 
 
-def deleteOrInsertMissedValues(df: pd.DataFrame) -> pd.DataFrame:
+def handleMissedValues(df: pd.DataFrame) -> pd.DataFrame:
     df.fillna(df.mean(numeric_only=True), inplace=True)
     df.fillna(df.mode().iloc[0], inplace=True)
     return df
@@ -77,7 +77,7 @@ def oneHotEncoding(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def dataPreprocessing(df: pd.DataFrame):
-    df = deleteOrInsertMissedValues(df)
+    df = handleMissedValues(df)
     x, y = oneHotEncoding(df)
 
     return (df, x, y)
